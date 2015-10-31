@@ -6,7 +6,8 @@
 # Copyright: (c) 2007 by OBJECTIVE DEVELOPMENT Software GmbH
 # License: GNU GPL v2 (see License.txt)
 
-CONFIG ?= t85_default
+CONFIG ?= t85_two_reset
+#CONFIG ?= t85_default
 #CONFIG ?= t85_aggressive
 #CONFIG ?= t841_default
 #CONFIG ?= t167_default
@@ -16,7 +17,7 @@ CONFIG ?= t85_default
 # Program the device with
 #     make fuse    			# to set the clock generator, boot section size etc.
 #     make flash   			# to load the boot loader into flash
-#     make disablereset		# use external reset line for IO (CAUTION: this is not easy to enable again, see README) 
+#     make disablereset		# use external reset line for IO (CAUTION: this is not easy to enable again, see README)
 
 CFLAGS =
 CONFIGPATH	  = configuration/$(CONFIG)
@@ -26,17 +27,17 @@ PROGRAMMER ?= -c USBasp
 # PROGRAMMER contains AVRDUDE options to address your programmer
 
 # Tools:
-AVRDUDE = avrdude $(PROGRAMMER) -p $(DEVICE) 
+AVRDUDE = avrdude $(PROGRAMMER) -p $(DEVICE)
 CC = avr-gcc
 
 # Options:
 CFLAGS += -I. -g2 -Os # -Wall
-CFLAGS += -I$(CONFIGPATH) -mmcu=$(DEVICE) -DF_CPU=$(F_CPU) -DBOOTLOADER_ADDRESS=0x$(BOOTLOADER_ADDRESS) 
+CFLAGS += -I$(CONFIGPATH) -mmcu=$(DEVICE) -DF_CPU=$(F_CPU) -DBOOTLOADER_ADDRESS=0x$(BOOTLOADER_ADDRESS)
 CFLAGS += -nostartfiles -ffunction-sections -fdata-sections -fpack-struct -fno-inline-small-functions -fno-move-loop-invariants -fno-tree-scev-cprop
 
 LDFLAGS = -Wl,--relax,--section-start=.text=$(BOOTLOADER_ADDRESS),-Map=main.map
 
-OBJECTS =  crt1.o usbdrv/usbdrvasm.o usbdrv/oddebug.o main.o 
+OBJECTS =  crt1.o usbdrv/usbdrvasm.o usbdrv/oddebug.o main.o
 OBJECTS += osccalASM.o
 
 # symbolic targets:
@@ -63,7 +64,7 @@ readflash:
 
 fuse:
 	$(AVRDUDE) $(FUSEOPT) -B 20
-	
+
 disablereset:
 	$(AVRDUDE) $(FUSEOPT_DISABLERESET) -B 20
 
@@ -82,7 +83,7 @@ main.hex:	main.bin
 	@rm -f main.hex main.eep.hex
 	@avr-objcopy -j .text -j .data -O ihex main.bin main.hex
 	@echo Size of sections:
-	@avr-size main.bin	
+	@avr-size main.bin
 	@echo Size of binary hexfile. Use the "data" size to calculate the bootloader address:
 	@avr-size main.hex
 
@@ -92,7 +93,7 @@ upgrade: main.bin
         --rename-section .data=.text \
         --redefine-sym _binary_main_raw_start=loader \
         --redefine-sym _binary_main_raw_end=loader_end \
-		main.raw bootloader_linkable.o	
-	
+		main.raw bootloader_linkable.o
+
 disasm:	main.bin
 	@avr-objdump -d -S main.bin >main.lss
